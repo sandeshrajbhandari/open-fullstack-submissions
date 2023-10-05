@@ -10,9 +10,9 @@ function App() {
   const api_key = import.meta.env.VITE_OPEN_WEATHER_KEY;
   const [weather, setWeather] = useState(null);
 
-  const getWeather = async (city) => {
-    console.log(api_key);
-    await axios
+  const getWeather = (city) => {
+    console.log(api_key, city);
+    axios
       .get(
         `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${api_key}`
       )
@@ -26,8 +26,9 @@ function App() {
       });
   };
 
-  const handleChange = async (event) => {
+  const handleChange = (event) => {
     setCountryInput(event.target.value);
+    console.log(countryInput);
 
     console.log("changing name to " + event.target.value);
     const newList = countryList.filter((c) =>
@@ -41,12 +42,12 @@ function App() {
       newList[0].toLowerCase() === event.target.value.toLowerCase()
     ) {
       console.log("setting country details");
-      let capital1 = "";
-      await nationService.getCountry(newList[0]).then((response) => {
+      nationService.getCountry(newList[0]).then((response) => {
         setCountry(response.data);
         console.log(response.data);
-        getWeather(response.data.capital[0]); // added async behavior
+        getWeather(response.data.capital[0]);
       });
+
       console.log("weather is " + weather);
     } else {
       setCountry(null);
@@ -89,13 +90,17 @@ function App() {
             ))}
           </ul>
           <img src={country.flags.png} alt="flag" width="100px" />
-          <h2>Weather in {country.name.common}</h2>
-          <p>temperature {weather.temp.toFixed(2)} Celcius</p>
-          <img
-            src={`https://openweathermap.org/img/wn/${weather.icon_id}@2x.png`}
-            alt="weather icon"
-          />
-          <p>wind: {weather.wind} m/s</p>
+          {weather && (
+            <>
+              <h2>Weather in {country.name.common}</h2>
+              <p>temperature {weather.temp.toFixed(2)} Celcius</p>
+              <img
+                src={`https://openweathermap.org/img/wn/${weather.icon_id}@2x.png`}
+                alt="weather icon"
+              />
+              <p>wind: {weather.wind} m/s</p>
+            </>
+          )}
         </div>
       );
     }

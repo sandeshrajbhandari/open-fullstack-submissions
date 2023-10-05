@@ -4,12 +4,15 @@ import Persons from "./components/Persons";
 import Filter from "./components/Filter";
 import axios from "axios";
 import personsService from "./services/persons";
+import Notification from "./components/Notification";
 
 const App = () => {
   const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [filterValue, setFilterValue] = useState("");
+  const [notifyObj, setNotifyObj] = useState(null);
+
   useEffect(() => {
     console.log("effect");
     personsService.getAll().then((response) => {
@@ -49,34 +52,59 @@ const App = () => {
               persons.filter((person) => person.id !== changedPerson.id)
             );
           });
-        return;
       } else return;
+    } else {
+      console.log("submitted");
+      const newPerson = {
+        name: newName,
+        number: newNumber,
+        id: persons.length + 1,
+      };
+      setPersons(persons.concat(newPerson));
+      personsService.create(newPerson).then((response) => {
+        console.log(response);
+      });
     }
-    console.log("submitted");
-    const newPerson = {
-      name: newName,
-      number: newNumber,
-    };
-    setPersons(persons.concat(newPerson));
-    personsService.create(newPerson).then((response) => {
-      console.log(response);
-    });
     setNewName("");
     setNewNumber("");
+    //timeout function to set message to null after 2 seconds
+    setNotifyObj({ message: `Added ${newName}`, style: "success" });
+    setTimeout(() => {
+      setNotifyObj(null);
+    }, 2000);
   };
 
   const deletePerson = (id) => {
     return () => {
+      console.log(id);
       const person = persons.find((person) => person.id === id);
       const result = window.confirm(`Delete ${person.name}?`);
       if (result) {
-        personsService.deletePerson(id).then((response) => {
-          console.log(response);
-          setPersons(persons.filter((person) => person.id !== id));
-        });
+        personsService
+          .deletePerson(id)
+          .then((response) => {
+            console.log(response);
+            setPersons(persons.filter((person) => person.id !== id));
+            setNotifyObj({ message: `Deleted ${newName}`, style: "success" });
+            setTimeout(() => {
+              setNotifyObj(null);
+            }, 2000);
+          })
+          .catch((error) => {
+            setNotifyObj({
+              message: `Information of '${person.name}' has already been removed from server`,
+              style: "error",
+            });
+            setTimeout(() => {
+              setNotifyObj(null);
+            }, 2000);
+            console.log(error);
+            setPersons(persons.filter((person) => person.id !== id));
+          });
       }
     };
   };
+
   const handleNameChange = (event) => {
     console.log(event.target.value);
     setNewName(event.target.value);
@@ -92,6 +120,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      {notifyObj ? <Notification notifyObj={notifyObj} /> : ""}
       <Filter filterValue={filterValue} handleFilter={handleFilter} />
       <h3>add a new</h3>
       <PersonForm

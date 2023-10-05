@@ -23,8 +23,34 @@ const App = () => {
     const isDuplicate = persons.some((person) => person.name === newName);
     console.log(isDuplicate);
     if (isDuplicate) {
-      alert(`${newName} is already added to phonebook`);
-      return;
+      const changeNumber = window.confirm(
+        `${newName} is already added to phonebook, replace the old number with a new one?`
+      );
+      if (changeNumber) {
+        const person = persons.find((person) => person.name === newName);
+        const changedPerson = { ...person, number: newNumber };
+        console.log(person.id);
+        // change persons state
+        setPersons(
+          persons.map((person) =>
+            person.name === newName ? changedPerson : person
+          )
+        );
+        // change database
+        personsService
+          .update(changedPerson.id, changedPerson)
+          .then((response) => {
+            console.log(response);
+          })
+          .catch((error) => {
+            alert(`the person '${newName}' was already deleted from server`);
+            console.log(error);
+            setPersons(
+              persons.filter((person) => person.id !== changedPerson.id)
+            );
+          });
+        return;
+      } else return;
     }
     console.log("submitted");
     const newPerson = {

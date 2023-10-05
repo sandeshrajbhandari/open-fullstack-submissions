@@ -6,6 +6,12 @@ const App = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    const isDuplicate = persons.some((person) => person.name === newName);
+    console.log(isDuplicate);
+    if (isDuplicate) {
+      alert(`${newName} is already added to phonebook`);
+      return;
+    }
     console.log("submitted");
     const newPerson = {
       name: newName,
